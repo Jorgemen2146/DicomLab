@@ -1,0 +1,7 @@
+@model DicomLab.Web.ViewModels.DicomWebViewModel
+<div asp-validation-summary="All" class="text-danger"></div>
+<div class="mb-3">
+    <label asp-for="BaseUrl" class="form-label"></label>
+    <input asp-for="BaseUrl" class="form-control" type="url" required />
+    <div class="form-text">URL base del servidor DICOMweb, incluyendo su prefijo (por ejemplo /dicom-web/).</div>
+</div>

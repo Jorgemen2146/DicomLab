@@ -1,0 +1,65 @@
+@model DicomLab.Web.ViewModels.DicomWebViewModel
+@{ ViewData["Title"] = "QIDO-RS"; }
+<h1>QIDO-RS · @Model.Level</h1>
+<form asp-action="@(Model.Level == "Studies" ? "Qido" : Model.Level)" method="post">
+    <partial name="_Endpoint" model="Model" />
+    @if (Model.Level == "Studies")
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-md-4"><label asp-for="PatientName" class="form-label"></label><input asp-for="PatientName" class="form-control" placeholder="TEST*" /></div>
+            <div class="col-md-4"><label asp-for="PatientID" class="form-label"></label><input asp-for="PatientID" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="StudyDate" class="form-label"></label><input asp-for="StudyDate" class="form-control" placeholder="20260916 o 20260101-20261231" /></div>
+            <div class="col-md-8"><label asp-for="StudyInstanceUID" class="form-label"></label><input asp-for="StudyInstanceUID" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="AccessionNumber" class="form-label"></label><input asp-for="AccessionNumber" class="form-control" /></div>
+        </div>
+    }
+    else
+    {
+        <input asp-for="StudyInstanceUID" type="hidden" /><input asp-for="SeriesInstanceUID" type="hidden" />
+        <p class="text-break">Study Instance UID: @Model.StudyInstanceUID</p>
+        @if (Model.Level == "Instances") { <p class="text-break">Series Instance UID: @Model.SeriesInstanceUID</p> }
+    }
+    <button class="btn btn-primary" type="submit">Buscar @Model.Level</button>
+    <a asp-action="Qido" class="btn btn-outline-secondary">Nueva búsqueda de estudios</a>
+</form>
+@if (Model.Result is { } result)
+{
+    <partial name="_Result" model="result" />
+    @if (result.IsSuccess)
+    {
+        <p class="mt-3">@result.Rows.Count resultado(s).</p>
+        <div class="table-responsive"><table class="table table-striped">
+            <thead><tr>
+                @if (Model.Level == "Studies") { <th>Patient Name</th><th>Patient ID</th><th>Study Date</th><th>Study Description</th><th>Accession Number</th><th>Study Instance UID</th> }
+                else if (Model.Level == "Series") { <th>Series Instance UID</th><th>Series Number</th><th>Modality</th><th>Series Description</th> }
+                else { <th>SOP Instance UID</th><th>SOP Class UID</th><th>Instance Number</th> }
+                <th>Acciones</th>
+            </tr></thead>
+            <tbody>@foreach (var row in result.Rows)
+            {
+                var tags = Model.Level == "Studies" ? new[] { "00100010", "00100020", "00080020", "00081030", "00080050", "0020000D" }
+                    : Model.Level == "Series" ? new[] { "0020000E", "00200011", "00080060", "0008103E" } : new[] { "00080018", "00080016", "00200013" };
+                var study = Model.Level == "Studies" ? row.Value("0020000D") : Model.StudyInstanceUID;
+                var series = Model.Level == "Series" ? row.Value("0020000E") : Model.SeriesInstanceUID;
+                var instance = row.Value("00080018");
+                <tr>
+                    @foreach (var tag in tags) { <td class="text-break">@(string.IsNullOrEmpty(row.Value(tag)) ? "N/A" : row.Value(tag))</td> }
+                    <td>
+                        <form asp-action="@(Model.Level == "Studies" ? "Series" : Model.Level == "Series" ? "Instances" : "Wado")" method="post">
+                            <input name="BaseUrl" value="@Model.BaseUrl" type="hidden" />
+                            <input name="StudyInstanceUID" value="@study" type="hidden" />
+                            <input name="SeriesInstanceUID" value="@series" type="hidden" />
+                            <input name="SOPInstanceUID" value="@instance" type="hidden" />
+                            @if (Model.Level == "Instances")
+                            {
+                                <button class="btn btn-sm btn-outline-primary mb-1" name="destination" value="download">Descargar DICOM</button>
+                                <button class="btn btn-sm btn-primary" name="destination" value="viewer">Ver DICOM</button>
+                            }
+                            else { <button class="btn btn-sm btn-outline-primary">@(Model.Level == "Studies" ? "Ver series" : "Ver instancias")</button> }
+                        </form>
+                    </td>
+                </tr>
+            }</tbody>
+        </table></div>
+    }
+}

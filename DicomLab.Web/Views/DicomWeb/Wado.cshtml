@@ -1,0 +1,14 @@
+@model DicomLab.Web.ViewModels.DicomWebViewModel
+@{ ViewData["Title"] = "WADO-RS"; }
+<h1>WADO-RS</h1>
+<p>Recupera una instancia por sus tres UIDs, o navega desde <a asp-action="Qido">QIDO-RS</a>.</p>
+<form asp-action="Wado" method="post">
+    <partial name="_Endpoint" model="Model" />
+    <div class="mb-3"><label asp-for="StudyInstanceUID" class="form-label"></label><input asp-for="StudyInstanceUID" class="form-control" required /></div>
+    <div class="mb-3"><label asp-for="SeriesInstanceUID" class="form-label"></label><input asp-for="SeriesInstanceUID" class="form-control" required /></div>
+    <div class="mb-3"><label asp-for="SOPInstanceUID" class="form-label"></label><input asp-for="SOPInstanceUID" class="form-control" required /></div>
+    <button class="btn btn-outline-primary" name="destination" value="download">Descargar DICOM</button>
+    <button class="btn btn-primary" name="destination" value="viewer">Ver DICOM</button>
+</form>
+<p class="mt-3">La descarga se entrega al navegador. “Ver DICOM” utiliza la memoria temporal de tu sesión y abre el visor existente; no crea una copia permanente en ReceivedDicoms.</p>
+@if (Model.Result is { } result) { <partial name="_Result" model="result" /> }

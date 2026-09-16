@@ -1,5 +1,6 @@
 using DicomLab.Web.Models;
 using DicomLab.Web.Services.Dicom;
+using DicomLab.Web.Services.DicomWeb;
 using FellowOakDicom;
 using FellowOakDicom.Imaging;
 using Microsoft.AspNetCore.Http.Features;
@@ -26,6 +27,12 @@ builder.Services.AddTransient<DicomImageService>();
 builder.Services.AddTransient<DicomNetworkService>();
 builder.Services.AddSingleton<DicomLocalServers>();
 builder.Services.AddHostedService(p => p.GetRequiredService<DicomLocalServers>());
+builder.Services.AddOptions<DicomWebOptions>().Bind(builder.Configuration.GetSection("DicomWeb"))
+    .Validate(o => o.TimeoutSeconds is >= 1 and <= 600 && o.MaxResponseMb is >= 1 and <= 512, "Límites DICOMweb no válidos.")
+    .ValidateOnStart();
+builder.Services.AddHttpClient<DicomWebService>((provider, client) =>
+    client.Timeout = TimeSpan.FromSeconds(provider.GetRequiredService<Microsoft.Extensions.Options.IOptions<DicomWebOptions>>().Value.TimeoutSeconds))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false });
 
 var app = builder.Build();
 

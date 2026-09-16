@@ -1,0 +1,19 @@
+@{ ViewData["Title"] = "DICOMweb Laboratory"; }
+<h1>DICOMweb Laboratory</h1>
+<p>Envía, busca y recupera instancias mediante HTTP/HTTPS desde este cliente de laboratorio.</p>
+<div class="d-flex gap-2 mb-4">
+    <a class="btn btn-primary" asp-action="Stow">STOW-RS · Enviar</a>
+    <a class="btn btn-primary" asp-action="Qido">QIDO-RS · Buscar</a>
+    <a class="btn btn-primary" asp-action="Wado">WADO-RS · Recuperar</a>
+</div>
+<table class="table">
+    <thead><tr><th>Objetivo</th><th>DIMSE · DICOM Upper Layer sobre TCP</th><th>DICOMweb · HTTP/HTTPS</th></tr></thead>
+    <tbody>
+        <tr><td>Almacenar</td><td>C-STORE</td><td>STOW-RS: POST de instancias DICOM</td></tr>
+        <tr><td>Buscar</td><td>C-FIND</td><td>QIDO-RS: GET de resultados DICOM JSON</td></tr>
+        <tr><td>Recuperar</td><td>C-MOVE / C-GET</td><td>WADO-RS: GET de objetos DICOM</td></tr>
+    </tbody>
+</table>
+<p>Son equivalencias de propósito. C-MOVE entrega mediante otra asociación C-STORE a un AE destino; WADO devuelve los bytes en la respuesta HTTP. C-GET no está implementado en este laboratorio.</p>
+<p>DIMSE utiliza AE Titles y asociaciones DICOM. DICOMweb utiliza URLs, métodos HTTP y tipos MIME. El SCP local de las pantallas DIMSE no ofrece endpoints DICOMweb.</p>
+<p>Para estas pruebas inicia un servidor DICOMweb, por ejemplo Orthanc con su plugin DICOMweb habilitado. La URL inicial es configurable y no inicia un servidor automáticamente.</p>

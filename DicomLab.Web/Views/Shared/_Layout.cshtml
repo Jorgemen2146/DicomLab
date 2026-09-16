@@ -20,8 +20,21 @@
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
-                        @foreach (var link in new[] { ("Viewer", "Viewer"), ("Echo", "C-ECHO"), ("Store", "C-STORE"), ("Find", "C-FIND"), ("Move", "C-MOVE") })
-                        { <li class="nav-item"><a class="nav-link text-dark" asp-controller="Dicom" asp-action="@link.Item1">@link.Item2</a></li> }
+                        <li class="nav-item"><a class="nav-link text-dark" asp-controller="Dicom" asp-action="Viewer">Viewer</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">DIMSE</a>
+                            <ul class="dropdown-menu">
+                                @foreach (var link in new[] { ("Echo", "C-ECHO"), ("Store", "C-STORE"), ("Find", "C-FIND"), ("Move", "C-MOVE") })
+                                { <li><a class="dropdown-item" asp-controller="Dicom" asp-action="@link.Item1">@link.Item2</a></li> }
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">DICOMweb</a>
+                            <ul class="dropdown-menu">
+                                @foreach (var link in new[] { ("Index", "Laboratorio"), ("Stow", "STOW-RS"), ("Qido", "QIDO-RS"), ("Wado", "WADO-RS") })
+                                { <li><a class="dropdown-item" asp-controller="DicomWeb" asp-action="@link.Item1">@link.Item2</a></li> }
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </div>

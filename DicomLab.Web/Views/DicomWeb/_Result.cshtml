@@ -1,0 +1,13 @@
+@model DicomLab.Web.Models.DicomWebResult
+<section class="mt-4" aria-label="Resultado HTTP">
+    <div class="alert @(Model.IsSuccess ? "alert-success" : "alert-danger")">
+        @if (Model.Status.HasValue) { <strong>HTTP @Model.Status @Model.Reason</strong> }
+        @if (Model.Error is not null) { <p class="mb-0">@Model.Error</p> }
+    </div>
+    <p class="text-break"><strong>Request:</strong> <code>@Model.Request</code></p>
+    @if (Model.ContentType is not null) { <p><strong>Content-Type:</strong> @Model.ContentType</p> }
+    @if (Model.Body is not null)
+    {
+        <details><summary>Response body</summary><pre class="border rounded p-3" style="max-height: 24rem; white-space: pre-wrap; overflow-wrap: anywhere;">@Model.Body</pre></details>
+    }
+</section>

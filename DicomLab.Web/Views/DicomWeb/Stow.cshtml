@@ -1,0 +1,20 @@
+@model DicomLab.Web.ViewModels.DicomWebViewModel
+@{ ViewData["Title"] = "STOW-RS"; }
+<h1>STOW-RS</h1>
+<p>Envía uno o varios archivos DICOM al endpoint <code>POST studies</code>.</p>
+<form asp-action="Stow" method="post" enctype="multipart/form-data">
+    <partial name="_Endpoint" model="Model" />
+    <div class="mb-3">
+        <label asp-for="Files" class="form-label">Seleccionar DICOM</label>
+        <input asp-for="Files" type="file" multiple required accept=".dcm,application/dicom" class="form-control" />
+        <ul id="selected-dicoms" class="mt-2" aria-live="polite"></ul>
+    </div>
+    <button class="btn btn-primary" type="submit">Enviar STOW-RS</button>
+</form>
+@if (Model.Result is { } result)
+{
+    <partial name="_Result" model="result" />
+    <p class="mt-3">@result.SopInstanceUids.Count instancia(s) @(result.Status.HasValue ? "incluidas en la solicitud STOW." : "validadas para el envío.") La respuesta del servidor determina cuáles fueron almacenadas; HTTP 202 puede indicar aceptación parcial.</p>
+    <ul>@foreach (var uid in result.SopInstanceUids) { <li class="text-break">SOP Instance UID: @uid</li> }</ul>
+}
+@section Scripts { <script src="~/js/dicomweb-stow.js" asp-append-version="true"></script> }
