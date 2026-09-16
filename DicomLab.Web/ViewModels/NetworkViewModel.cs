@@ -28,6 +28,10 @@ public sealed class NetworkViewModel
     [BindNever, ValidateNever] public string Operation { get; set; } = "Echo";
     [BindNever, ValidateNever] public string? Result { get; set; }
     [BindNever, ValidateNever] public string? Error { get; set; }
+    [BindNever, ValidateNever] public string? FileName { get; set; }
+    [BindNever, ValidateNever] public string? SopInstanceUid { get; set; }
+    [BindNever, ValidateNever] public string? SopClassUid { get; set; }
+    [BindNever, ValidateNever] public string? SavedPath { get; set; }
     [BindNever, ValidateNever] public List<StudyRow> Studies { get; set; } = [];
     [BindNever, ValidateNever] public List<MoveRow> Progress { get; set; } = [];
 }

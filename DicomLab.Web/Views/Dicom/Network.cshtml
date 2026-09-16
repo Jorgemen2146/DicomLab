@@ -31,14 +31,31 @@
     }
     @if (Model.Operation == "Store")
     {
-        <label asp-for="File" class="form-label">Archivo DICOM</label>
-        <input asp-for="File" type="file" accept=".dcm,application/dicom" required class="form-control mb-3" />
+        <partial name="_DicomFilePicker" />
     }
-    <button class="btn btn-primary" type="submit">Ejecutar C-@Model.Operation.ToUpperInvariant()</button>
+    <button class="btn btn-primary" type="submit">@(Model.Operation == "Store" ? "Enviar C-STORE" : $"Ejecutar C-{Model.Operation.ToUpperInvariant()}")</button>
     <span data-operation-status role="status" class="ms-2"></span>
 </form>
-@if (Model.Error is not null) { <div class="alert alert-danger" role="alert">@Model.Error</div> }
+@if (Model.Error is not null) { <div class="alert alert-danger" role="alert"><strong>FAILED:</strong> @Model.Error</div> }
 @if (Model.Result is not null) { <div class="alert @(Model.Error is null ? "alert-success" : "alert-warning")" role="status">@Model.Result</div> }
+@if (Model.Operation == "Store" && Model.FileName is not null)
+{
+    <dl class="row">
+        <dt class="col-sm-3">Archivo</dt><dd class="col-sm-9 text-break">@Model.FileName</dd>
+        <dt class="col-sm-3">SOP Instance UID</dt><dd class="col-sm-9 text-break">@(Model.SopInstanceUid ?? "N/A")</dd>
+        <dt class="col-sm-3">SOP Class UID</dt><dd class="col-sm-9 text-break">@(Model.SopClassUid ?? "N/A")</dd>
+        @if (Model.SavedPath is not null)
+        {
+            <dt class="col-sm-3">Ruta del archivo guardado</dt>
+            <dd class="col-sm-9 text-break"><code>@Model.SavedPath</code></dd>
+        }
+        else if (Model.Result is not null)
+        {
+            <dt class="col-sm-3">Ruta del archivo guardado</dt>
+            <dd class="col-sm-9">No disponible: el receptor no es un SCP iniciado desde esta aplicación web. C-STORE no devuelve la ruta física del PACS remoto.</dd>
+        }
+    </dl>
+}
 @if (Model.Studies.Count > 0)
 {
     <div class="table-responsive"><table class="table table-striped">
@@ -55,4 +72,7 @@
         { <tr><td>@step.Status</td><td>@step.Remaining</td><td>@step.Completed</td><td>@step.Failed</td><td>@step.Warning</td></tr> }</tbody>
     </table>
 }
-@section Scripts { <script src="~/js/network.js" asp-append-version="true"></script> }
+@section Scripts {
+    <script src="~/js/dicom-file-picker.js" asp-append-version="true"></script>
+    <script src="~/js/network.js" asp-append-version="true"></script>
+}

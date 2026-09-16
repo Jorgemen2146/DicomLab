@@ -2,13 +2,14 @@
 @{ ViewData["Title"] = "DICOM Viewer"; }
 <h1>DICOM Viewer</h1>
 <p>Selecciona un archivo DICOM extraído. Máximo @Model.MaxUploadMb MB.</p>
-<form asp-action="Viewer" method="post" enctype="multipart/form-data" class="d-flex gap-2 mb-4">
-    <input type="file" name="file" accept=".dcm,application/dicom" required class="form-control" aria-label="Archivo DICOM" />
-    <button class="btn btn-primary">Cargar</button>
+<form asp-action="Viewer" method="post" enctype="multipart/form-data" class="mb-4">
+    <partial name="_DicomFilePicker" />
+    <button class="btn btn-primary" type="submit">Cargar DICOM</button>
 </form>
 @if (Model.Error is not null) { <div class="alert alert-danger" role="alert">@Model.Error</div> }
 @if (Model.Metadata is not null)
 {
+    <p><strong>Archivo cargado:</strong> @Model.FileName</p>
     @if (Model.HasPixelData)
     {
         <div class="bg-dark text-center rounded p-3 mb-3">
@@ -21,7 +22,7 @@
             @if (Model.Frame + 1 < Model.Frames) { <a class="btn btn-outline-primary" asp-action="Viewer" asp-route-id="@Model.Id" asp-route-frame="@(Model.Frame + 1)">Siguiente</a> }
         </div>
     }
-    else { <div class="alert alert-info">Este DICOM no contiene Pixel Data. Puedes consultar sus tags.</div> }
+    else { <div class="alert alert-info">Este objeto DICOM no contiene una imagen visualizable.</div> }
     <h2 class="h4">Información del DICOM</h2>
     <dl class="row">
         @foreach (var pair in Model.Metadata.MainTags)
@@ -38,4 +39,7 @@
         { <tr><td class="text-nowrap">@tag.Tag</td><td style="padding-left:@(tag.Depth * 12 + 8)px">@tag.Name</td><td>@tag.Vr</td><td class="text-break">@tag.Value</td></tr> }</tbody>
     </table></div>
 }
-@section Scripts { <script src="~/js/viewer.js" asp-append-version="true"></script> }
+@section Scripts {
+    <script src="~/js/dicom-file-picker.js" asp-append-version="true"></script>
+    <script src="~/js/viewer.js" asp-append-version="true"></script>
+}

@@ -5,7 +5,7 @@ using pruebasdicom.Services;
 
 namespace DicomLab.Web.Services.Dicom;
 
-public sealed class DicomNetworkService(ILogger<DicomNetworkService> logger, DicomFileService files)
+public sealed class DicomNetworkService(ILogger<DicomNetworkService> logger, DicomFileService files, DicomLocalServers servers)
 {
     private DicomClientService Client(NetworkViewModel model) => new(
         new DicomNodeOptions(model.RemoteAe.Trim(), model.Host.Trim(), model.Port), model.LocalAe.Trim(),
@@ -42,10 +42,26 @@ public sealed class DicomNetworkService(ILogger<DicomNetworkService> logger, Dic
 
     public async Task StoreAsync(NetworkViewModel model, CancellationToken token)
     {
+        model.FileName = DicomFileService.DisplayFileName(model.File?.FileName);
         var bytes = await files.ReadUploadAsync(model.File, token);
         using var stream = new MemoryStream(bytes, false);
         var dicom = await DicomFile.OpenAsync(stream);
-        var status = await Client(model).StoreAsync(dicom, token);
-        model.Result = $"C-STORE: {status} (0x{status.Code:X4}). SOP Instance UID: {DicomStudyService.Value(dicom.Dataset, DicomTag.SOPInstanceUID)}";
+        model.SopInstanceUid = DicomStudyService.Value(dicom.Dataset, DicomTag.SOPInstanceUID);
+        model.SopClassUid = DicomStudyService.Value(dicom.Dataset, DicomTag.SOPClassUID);
+        ushort? messageId = null;
+        var isLocal = servers.IsManagedDestination(new(model.RemoteAe.Trim(), model.Host.Trim(), model.Port));
+        void OnStored(DicomStoredFile receipt)
+        {
+            if (isLocal && receipt.MessageId == messageId && receipt.CalledAe == model.RemoteAe.Trim() &&
+                receipt.CallingAe == model.LocalAe.Trim() && receipt.SopInstanceUid == model.SopInstanceUid)
+                model.SavedPath = receipt.Path;
+        }
+        servers.FileStored += OnStored;
+        try
+        {
+            var status = await Client(model).StoreAsync(dicom, token, id => messageId = id);
+            model.Result = $"C-STORE: {status} (0x{status.Code:X4}). SOP Instance UID: {model.SopInstanceUid}";
+        }
+        finally { servers.FileStored -= OnStored; }
     }
 }

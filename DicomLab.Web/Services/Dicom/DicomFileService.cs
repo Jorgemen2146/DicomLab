@@ -8,7 +8,7 @@ namespace DicomLab.Web.Services.Dicom;
 
 public sealed class DicomFileService(IOptions<DicomLabOptions> options, DicomReaderService reader) : BackgroundService
 {
-    private sealed record Upload(string Owner, byte[] Bytes, DateTime Expires);
+    private sealed record Upload(string Owner, byte[] Bytes, DateTime Expires, string FileName);
     private readonly Dictionary<string, Upload> _uploads = new();
     private readonly object _gate = new();
     private readonly DicomLabOptions _options = options.Value;
@@ -34,7 +34,15 @@ public sealed class DicomFileService(IOptions<DicomLabOptions> options, DicomRea
         return output.ToArray();
     }
 
-    public string Remember(string owner, byte[] bytes)
+    public static string DisplayFileName(string? fileName)
+    {
+        var name = (fileName ?? "").Replace('\\', '/').Split('/').Last();
+        name = new string(name.Where(c => !char.IsControl(c)).ToArray());
+        if (string.IsNullOrWhiteSpace(name)) return "DICOM";
+        return name.Length > 255 ? name[..255] : name;
+    }
+
+    public string Remember(string owner, byte[] bytes, string? fileName = null)
     {
         lock (_gate)
         {
@@ -44,12 +52,14 @@ public sealed class DicomFileService(IOptions<DicomLabOptions> options, DicomRea
             while (_uploads.Values.Sum(u => u.Bytes.LongLength) + bytes.LongLength > capacity)
                 _uploads.Remove(_uploads.MinBy(p => p.Value.Expires).Key);
             var id = Guid.NewGuid().ToString("N");
-            _uploads.Add(id, new(owner, bytes, DateTime.UtcNow.AddMinutes(_options.UploadLifetimeMinutes)));
+            _uploads.Add(id, new(owner, bytes, DateTime.UtcNow.AddMinutes(_options.UploadLifetimeMinutes), DisplayFileName(fileName)));
             return id;
         }
     }
 
-    public byte[] GetBytes(string id, string owner)
+    public byte[] GetBytes(string id, string owner) => GetUpload(id, owner).Bytes;
+
+    private Upload GetUpload(string id, string owner)
     {
         lock (_gate)
         {
@@ -57,19 +67,20 @@ public sealed class DicomFileService(IOptions<DicomLabOptions> options, DicomRea
             if (!_uploads.TryGetValue(id, out var upload) || upload.Owner != owner)
                 throw new FileNotFoundException("El archivo no está disponible o expiró. Vuelve a cargarlo.");
             _uploads[id] = upload with { Expires = DateTime.UtcNow.AddMinutes(_options.UploadLifetimeMinutes) };
-            return upload.Bytes;
+            return upload;
         }
     }
 
     public async Task<ViewerViewModel> DescribeAsync(string id, string owner, int frame)
     {
-        using var stream = new MemoryStream(GetBytes(id, owner), false);
+        var upload = GetUpload(id, owner);
+        using var stream = new MemoryStream(upload.Bytes, false);
         var file = await DicomFile.OpenAsync(stream);
         var frames = Math.Max(1, file.Dataset.GetSingleValueOrDefault(DicomTag.NumberOfFrames, 1));
         if (frame < 0 || frame >= frames) throw new ArgumentOutOfRangeException(nameof(frame), "El frame solicitado no existe.");
         return new ViewerViewModel
         {
-            Id = id, Metadata = reader.GetMetadata(file), Frame = frame, Frames = frames,
+            Id = id, FileName = upload.FileName, Metadata = reader.GetMetadata(file), Frame = frame, Frames = frames,
             HasPixelData = file.Dataset.Contains(DicomTag.PixelData), MaxUploadMb = _options.MaxUploadMb
         };
     }

@@ -3,7 +3,7 @@ using pruebasdicom.Services;
 using pruebasdicom.Models;
 
 var dicomPath = args.Length > 0 ? args[0] :
-    @"C:\Users\USUARIO\Downloads\Anonymized_20260916\series-00002\image-00000.dcm";
+    @"C:\Users\USUARIO\Downloads\Anonymized_20260916\series-00000\image-00000.dcm";
 var receivedDirectory = Path.GetFullPath("ReceivedDicoms");
 var movedDirectory = Path.GetFullPath("MovedDicoms");
 var pacsNode = new DicomNodeOptions("LOCAL_PACS", "127.0.0.1", 11112);

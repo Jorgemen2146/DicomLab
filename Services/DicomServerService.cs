@@ -90,6 +90,12 @@ public partial class LocalDicomScp : DicomService, IDicomServiceProvider, IDicom
             NodeOptions.Write($"Saved: {path}");
             NodeOptions.Write("Verificación del DICOM guardado:");
             await new DicomReaderService(NodeOptions.Write).ReadAsync(path);
+            try
+            {
+                NodeOptions.OnFileStored?.Invoke(new DicomStoredFile(Association.CalledAE, Association.CallingAE,
+                    request.MessageID, request.SOPInstanceUID.UID, Path.GetFullPath(path)));
+            }
+            catch (Exception ex) { Logger.LogWarning(ex, "No se pudo notificar la ruta del DICOM guardado"); }
             return new DicomCStoreResponse(request, DicomStatus.Success);
         }
         catch (Exception ex)

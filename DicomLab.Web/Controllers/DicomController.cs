@@ -39,7 +39,7 @@ public partial class DicomController(DicomFileService files, DicomImageService i
         try
         {
             var bytes = await files.ReadUploadAsync(file, HttpContext.RequestAborted);
-            return RedirectToAction(nameof(Viewer), new { id = files.Remember(Owner, bytes) });
+            return RedirectToAction(nameof(Viewer), new { id = files.Remember(Owner, bytes, file?.FileName) });
         }
         catch (Exception ex)
         {

@@ -45,9 +45,11 @@ public class DicomClientService
         return await StoreAsync(file, cancellationToken);
     }
 
-    public async Task<DicomStatus> StoreAsync(DicomFile file, CancellationToken cancellationToken = default)
+    public async Task<DicomStatus> StoreAsync(DicomFile file, CancellationToken cancellationToken = default,
+        Action<ushort>? onRequestCreated = null)
     {
         var request = new DicomCStoreRequest(file);
+        onRequestCreated?.Invoke(request.MessageID);
         _write("Sending C-STORE...");
         _write($"SOP Instance UID: {request.SOPInstanceUID.UID}");
         var client = CreateClient();

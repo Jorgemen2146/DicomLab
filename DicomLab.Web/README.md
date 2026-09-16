@@ -18,15 +18,17 @@ No inicies los mismos SCP simultáneamente desde consola y MVC: ambos usan 11112
 
 ## Flujo de prueba
 
-1. **Viewer**: selecciona un `.dcm` ya extraído del ZIP y pulsa Cargar. Se muestran metadata, tags y el PNG del frame seleccionado. Para multiframe usa Anterior/Siguiente. Window Center y Window Width se muestran desde el dataset; `DicomImage` utiliza su pipeline estándar y su comportamiento automático cuando faltan.
+1. **Viewer**: pulsa **Seleccionar DICOM**, elige un archivo ya extraído del ZIP en el diálogo del navegador y pulsa **Cargar DICOM**. No escribas nombres ni rutas. MVC recibe el contenido como `IFormFile`, valida el stream con fo-dicom y muestra el nombre cargado, metadata, tags y el PNG del frame seleccionado. Para multiframe usa Anterior/Siguiente. Window Center y Window Width se muestran desde el dataset; `DicomImage` utiliza su pipeline estándar y su comportamiento automático cuando faltan. Si no hay Pixel Data, aparece «Este objeto DICOM no contiene una imagen visualizable.» y se conservan los tags.
 2. **Dashboard**: pulsa Iniciar LOCAL_PACS. Debe quedar Escuchando en 127.0.0.1:11112.
 3. **C-ECHO**: conserva LOCAL_PACS / 127.0.0.1 / 11112 / DICOM_CLIENT y ejecuta. Se muestra el estado DICOM y su código hexadecimal.
-4. **C-STORE**: selecciona un DICOM y envíalo al PACS. Repite con varias instancias del mismo estudio. El SCP guarda en ReceivedDicoms y conserva su política de nombres únicos. No se usa el nombre del upload para escribir en disco.
+4. **C-STORE**: pulsa **Seleccionar DICOM** y después **Enviar C-STORE**. El resultado muestra archivo, SOP Instance UID, SOP Class UID y estado DICOM. Si el envío falla después de validar el archivo, sus identificadores siguen visibles. Repite con varias instancias del mismo estudio. El SCP guarda en ReceivedDicoms y conserva su política de nombres únicos. El nombre del upload se limpia solo para mostrarlo y nunca se usa para escribir en disco.
 5. **C-FIND**: deja los filtros vacíos para listar estudios o usa los criterios existentes: PatientID, PatientName, StudyInstanceUID, StudyDate, StudyDescription y Modality. Los filtros se combinan. La tabla devuelve un resultado por estudio; el enlace C-MOVE precarga su UID. Se conservan los comodines de texto y los rangos de fecha yyyyMMdd-yyyyMMdd del laboratorio.
 6. **Dashboard**: inicia MOVE_DESTINATION en 127.0.0.1:11113.
 7. **C-MOVE**: introduce el StudyInstanceUID y MOVE_DESTINATION. Tras terminar se muestra el historial de respuestas Pending/final, Remaining, Completed, Failed y Warning. Los archivos llegan mediante una segunda asociación C-STORE a MovedDicoms. No se copian directamente entre carpetas ni se eliminan del PACS.
 
 El dashboard muestra las rutas absolutas. En MVC se resuelven contra el directorio del proyecto web, no contra el directorio de trabajo: por defecto apuntan a ReceivedDicoms y MovedDicoms del proyecto de consola.
+
+En el resultado de **C-STORE** también aparece **Ruta del archivo guardado** cuando el receptor es un SCP iniciado desde este dashboard. Es la ruta real confirmada después de guardar y verificar el archivo, incluido el nombre único generado por el servidor. Se relaciona con la solicitud mediante los AE Titles, el Message ID y el SOP Instance UID. Si el receptor es un PACS externo o un SCP ejecutado en otro proceso (por ejemplo la consola), se indica que la ruta no está disponible: el protocolo C-STORE no la devuelve.
 
 ## Rutas MVC
 

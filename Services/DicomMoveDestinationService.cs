@@ -2,14 +2,16 @@ using pruebasdicom.Models;
 
 namespace pruebasdicom.Services;
 
-public sealed class DicomMoveDestinationService(DicomNodeOptions node, string directory, Action<string>? write = null) : IDisposable
+public sealed class DicomMoveDestinationService(DicomNodeOptions node, string directory, Action<string>? write = null,
+    Action<DicomStoredFile>? onFileStored = null) : IDisposable
 {
     private readonly DicomServerService _server = new(new DicomServerOptions
     {
         Node = node,
         StorageDirectory = Path.GetFullPath(directory),
         EnableQueryRetrieve = false,
-        Write = write ?? Console.WriteLine
+        Write = write ?? Console.WriteLine,
+        OnFileStored = onFileStored
     });
 
     public bool IsListening => _server.IsListening;
