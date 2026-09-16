@@ -1,0 +1,16 @@
+﻿@model ErrorViewModel
+@{
+    ViewData["Title"] = "Error";
+}
+
+<h1 class="text-danger">No se pudo completar la solicitud</h1>
+<p>Vuelve al laboratorio e intenta nuevamente. El detalle técnico se ha registrado en los logs.</p>
+<a asp-controller="Dicom" asp-action="Index" class="btn btn-primary">Volver a DICOM Lab</a>
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}
+

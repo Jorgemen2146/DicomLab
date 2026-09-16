@@ -1,0 +1,29 @@
+@inject DicomLab.Web.Services.Dicom.DicomLocalServers Servers
+@inject Microsoft.Extensions.Options.IOptions<DicomLab.Web.Models.DicomLabOptions> Options
+@{ ViewData["Title"] = "DICOM Lab"; }
+<h1>DICOM Lab</h1>
+<p>Lectura de imágenes, metadatos y operaciones de red DICOM.</p>
+<div class="row g-3">
+@foreach (var entry in new[] { ("Viewer", "Abrir DICOM · imagen y tags"), ("Echo", "C-ECHO · conectividad"), ("Find", "C-FIND · buscar estudios"), ("Move", "C-MOVE · recuperar estudio"), ("Store", "C-STORE · enviar instancia") })
+{
+    <div class="col-md-6"><a class="card card-body text-decoration-none" asp-action="@entry.Item1">@entry.Item2</a></div>
+}
+</div>
+<h2 class="h4 mt-4">Servidores locales</h2>
+@if (TempData["ServerMessage"] is string message) { <div class="alert alert-success">@message</div> }
+@if (TempData["ServerError"] is string error) { <div class="alert alert-danger">@error</div> }
+<div class="row g-3">
+    <div class="col-md-6"><div class="card card-body">
+        <h3 class="h5">@Options.Value.Pacs.AeTitle</h3>
+        <p>@Options.Value.Pacs.Host:@Options.Value.Pacs.Port · @(Servers.PacsListening ? "Escuchando" : "Detenido")</p>
+        <form asp-action="StartServer" method="post"><input type="hidden" name="destination" value="false" /><button class="btn btn-primary">Iniciar LOCAL_PACS</button></form>
+    </div></div>
+    <div class="col-md-6"><div class="card card-body">
+        <h3 class="h5">@Options.Value.MoveDestination.AeTitle</h3>
+        <p>@Options.Value.MoveDestination.Host:@Options.Value.MoveDestination.Port · @(Servers.DestinationListening ? "Escuchando" : "Detenido")</p>
+        <form asp-action="StartServer" method="post"><input type="hidden" name="destination" value="true" /><button class="btn btn-primary">Iniciar MOVE_DESTINATION</button></form>
+    </div></div>
+</div>
+<dl class="row mt-4"><dt class="col-sm-3">ReceivedDicoms</dt><dd class="col-sm-9 text-break">@Servers.ReceivedDirectory</dd>
+<dt class="col-sm-3">MovedDicoms</dt><dd class="col-sm-9 text-break">@Servers.MovedDirectory</dd></dl>
+<p>Inicia el PACS, comprueba C-ECHO y envía archivos con C-STORE. Después busca el estudio con C-FIND e inicia el destino para recuperarlo con C-MOVE.</p>

@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="DicomLab.Core/DicomLab.Core.csproj" />
+  <Project Path="DicomLab.Web/DicomLab.Web.csproj" />
+  <Project Path="pruebasdicom.csproj" />
+</Solution>

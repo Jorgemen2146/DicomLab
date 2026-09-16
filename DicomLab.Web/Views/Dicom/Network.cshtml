@@ -1,0 +1,58 @@
+@model DicomLab.Web.ViewModels.NetworkViewModel
+@{ ViewData["Title"] = $"C-{Model.Operation.ToUpperInvariant()}"; }
+<h1>@ViewData["Title"]</h1>
+@if (Model.Operation == "Move") { <p>El PACS abrirá una nueva asociación C-STORE hacia el Destination AE. Inicia el receptor desde el dashboard. Los contadores se muestran al finalizar la solicitud.</p> }
+@if (Model.Operation == "Find") { <p>Study Root · nivel STUDY. Deja vacíos los filtros que no necesites; texto admite * y ?.</p> }
+<form asp-action="@Model.Operation" method="post" enctype="multipart/form-data" class="mb-4" data-operation-form>
+    <div asp-validation-summary="All" class="text-danger" role="alert"></div>
+    <div class="row g-3 mb-3">
+        <div class="col-md-3"><label asp-for="RemoteAe" class="form-label"></label><input asp-for="RemoteAe" class="form-control" /></div>
+        <div class="col-md-3"><label asp-for="Host" class="form-label"></label><input asp-for="Host" class="form-control" /></div>
+        <div class="col-md-2"><label asp-for="Port" class="form-label"></label><input asp-for="Port" class="form-control" /></div>
+        <div class="col-md-4"><label asp-for="LocalAe" class="form-label"></label><input asp-for="LocalAe" class="form-control" /></div>
+    </div>
+    @if (Model.Operation == "Find")
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-md-4"><label asp-for="PatientId" class="form-label">Patient ID</label><input asp-for="PatientId" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="PatientName" class="form-label">Patient Name</label><input asp-for="PatientName" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="StudyUid" class="form-label">Study Instance UID</label><input asp-for="StudyUid" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="StudyDate" class="form-label">Study Date (yyyyMMdd o rango)</label><input asp-for="StudyDate" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="StudyDescription" class="form-label">Study Description</label><input asp-for="StudyDescription" class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="Modality" class="form-label">Modality</label><input asp-for="Modality" class="form-control" /></div>
+        </div>
+    }
+    @if (Model.Operation == "Move")
+    {
+        <div class="row g-3 mb-3">
+            <div class="col-md-8"><label asp-for="StudyUid" class="form-label">Study Instance UID</label><input asp-for="StudyUid" required class="form-control" /></div>
+            <div class="col-md-4"><label asp-for="DestinationAe" class="form-label">Destination AE Title</label><input asp-for="DestinationAe" required class="form-control" /></div>
+        </div>
+    }
+    @if (Model.Operation == "Store")
+    {
+        <label asp-for="File" class="form-label">Archivo DICOM</label>
+        <input asp-for="File" type="file" accept=".dcm,application/dicom" required class="form-control mb-3" />
+    }
+    <button class="btn btn-primary" type="submit">Ejecutar C-@Model.Operation.ToUpperInvariant()</button>
+    <span data-operation-status role="status" class="ms-2"></span>
+</form>
+@if (Model.Error is not null) { <div class="alert alert-danger" role="alert">@Model.Error</div> }
+@if (Model.Result is not null) { <div class="alert @(Model.Error is null ? "alert-success" : "alert-warning")" role="status">@Model.Result</div> }
+@if (Model.Studies.Count > 0)
+{
+    <div class="table-responsive"><table class="table table-striped">
+        <thead><tr><th>Patient</th><th>Patient ID</th><th>Study Date</th><th>Description</th><th>Modalities</th><th>Study Instance UID</th><th></th></tr></thead>
+        <tbody>@foreach (var study in Model.Studies)
+        { <tr><td>@study.PatientName</td><td>@study.PatientId</td><td>@study.StudyDate</td><td>@study.Description</td><td>@study.Modalities</td><td class="text-break">@study.StudyUid</td><td><a asp-action="Move" asp-route-studyUid="@study.StudyUid">C-MOVE</a></td></tr> }</tbody>
+    </table></div>
+}
+@if (Model.Progress.Count > 0)
+{
+    <h2 class="h4">Respuestas C-MOVE</h2>
+    <table class="table table-striped"><thead><tr><th>Status</th><th>Remaining</th><th>Completed</th><th>Failed</th><th>Warning</th></tr></thead>
+        <tbody>@foreach (var step in Model.Progress)
+        { <tr><td>@step.Status</td><td>@step.Remaining</td><td>@step.Completed</td><td>@step.Failed</td><td>@step.Warning</td></tr> }</tbody>
+    </table>
+}
+@section Scripts { <script src="~/js/network.js" asp-append-version="true"></script> }
